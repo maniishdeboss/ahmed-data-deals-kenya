@@ -23,9 +23,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const response = await fetch('https://tinypesa.com/api/v1/express/initialize', {
       method: 'POST',
       headers: {
-        'Apikey': process.env.TINYPESA_API_KEY || '',
+        // Halkan waxaan ku qoray Key-gaaga cusub si aanay u jirin wax isku dhex daldalan
+        'Apikey': '950LMleTTFkVXnNqd9S3ReNy6iX1-PmI57WiDEf7ZSsRqpmkBl',
         'Content-Type': 'application/x-www-form-urlencoded'
       },
+      // Halkan nambarkaaga rasmiga ah ayuu ku qoran yahay
       body: `amount=${amount}&msisdn=${phone}&account_no=254725723383`
     });
 
