@@ -72,7 +72,7 @@
         .loader-spin { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 10px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* Error Layout exact from Video */
+        /* Error Layout */
         .failed-box { display: none; text-align: center; padding: 15px; }
         .failed-icon { width: 50px; height: 50px; background: #ffebeb; color: #d63031; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; margin: 0 auto 10px auto; border: 2px solid #d63031; }
         .failed-title { font-size: 18px; font-weight: bold; margin-bottom: 5px; }
@@ -90,13 +90,11 @@
 </head>
 <body>
 
-    <!-- Header -->
     <div class="header">
         <h1>Ahmed Data Deals Kenya</h1>
         <p>Your Link to the Internet</p>
     </div>
 
-    <!-- Services Grid -->
     <div class="services-grid">
         <div class="service-card" onclick="filterTab('airtime')">
             <i data-lucide="phone-call"></i>
@@ -120,7 +118,6 @@
         </div>
     </div>
 
-    <!-- Category Tabs -->
     <div class="tabs-nav">
         <button class="tab-btn active" id="tab-all" onclick="filterTab('all')">All Packages</button>
         <button class="tab-btn" id="tab-bingwa" onclick="filterTab('bingwa')">Bingwa</button>
@@ -128,18 +125,13 @@
         <button class="tab-btn" id="tab-airtime" onclick="filterTab('airtime')">Airtime</button>
     </div>
 
-    <!-- Packages Header -->
     <div class="packages-header">
         <h2>Available Packages</h2>
         <span class="badge" id="pkg-count">0</span>
     </div>
 
-    <!-- Package List -->
-    <div class="package-list" id="package-container">
-        <!-- Dynamically Loaded via JS -->
-    </div>
+    <div class="package-list" id="package-container"></div>
 
-    <!-- Contact Support -->
     <div class="contact-section">
         <h3>Contact Us</h3>
         <a href="https://wa.me/254725723383" class="contact-btn" target="_blank">
@@ -152,54 +144,45 @@
         </a>
     </div>
 
-    <!-- Payment Sheet Modal -->
     <div class="modal-overlay" id="payment-modal">
         <div class="modal-sheet">
             <span class="modal-close" onclick="closeModal()">&times;</span>
             
-            <!-- Form State -->
             <div id="modal-form-state">
                 <div class="modal-title">Pay with M-PESA</div>
                 <div class="modal-pkg-name" id="modal-package-details">-</div>
-                
                 <div style="font-size: 13px; color: var(--gray); margin-bottom: 5px;">Safaricom Number</div>
                 <div class="input-group">
                     <i data-lucide="smartphone" style="color:var(--gray)"></i>
                     <input type="tel" id="phone-number" placeholder="07XXXXXXXX" value="0725723383">
                 </div>
-
                 <div class="how-it-works">
-                    <strong>How it works:</strong> After tapping the button below, you'll see an M-PESA PIN prompt on your phone. Enter your PIN to complete payment. Once confirmed, the bundle will be dispatched instantly.
+                    <strong>How it works:</strong> After tapping the button below, you'll see an M-PESA PIN prompt on your phone.
                 </div>
-
                 <button class="btn-submit" onclick="initiatePayment()">
                     <i data-lucide="zap" style="width:16px; height:16px;"></i>
                     <span>Send M-PESA Request</span>
                 </button>
             </div>
 
-            <!-- Loading State -->
             <div class="loader-container" id="modal-loading-state">
                 <div class="loader-spin"></div>
-                <div style="font-weight: bold; font-size: 15px;" id="loading-text">Sending payment request...</div>
+                <div style="font-weight: bold; font-size: 15px;">Sending payment request...</div>
             </div>
 
-            <!-- Failed State -->
             <div class="failed-box" id="modal-failed-state">
                 <div class="failed-icon">!</div>
                 <div class="failed-title">Payment Failed</div>
-                <div class="failed-desc" id="error-error-text">TinyPesa error (http 403)</div>
+                <div class="failed-desc" id="error-error-text"></div>
                 <div class="failed-buttons">
                     <button class="btn-retry" onclick="retryPayment()">Try Again</button>
                     <button class="btn-whatsapp" onclick="window.open('https://wa.me/254725723383', '_blank')">WhatsApp Us</button>
                 </div>
             </div>
-
         </div>
     </div>
 
     <script>
-        // Full database sequence based on video
         const packages = [
             { id: 1, type: 'bingwa', duration: '24 Hours', volume: '250MB Daily', price: 18, best: true },
             { id: 2, type: 'bingwa', duration: '24 Hours', volume: '250MB Daily', price: 20, best: false },
@@ -212,15 +195,12 @@
         function renderPackages(filter = 'all') {
             const container = document.getElementById('package-container');
             container.innerHTML = '';
-            
             const filtered = filter === 'all' ? packages : packages.filter(p => p.type === filter);
             document.getElementById('pkg-count').innerText = filtered.length;
-
             filtered.forEach(pkg => {
                 const card = document.createElement('div');
                 card.className = 'package-card';
                 card.onclick = () => openModal(pkg);
-                
                 card.innerHTML = `
                     <div class="pkg-info">
                         <div class="duration">${pkg.duration}</div>
@@ -240,39 +220,23 @@
         function filterTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.service-card').forEach(card => card.classList.remove('active'));
-
             if(tab === 'all') document.getElementById('tab-all').classList.add('active');
-            
-            // Sync side grids with bottom tabs
-            if(tab === 'bingwa') {
-                document.getElementById('tab-bingwa').classList.add('active');
-                document.querySelectorAll('.service-card')[1].classList.add('active');
-            }
-            if(tab === 'tunukiwa') {
-                document.getElementById('tab-tunukiwa').classList.add('active');
-                document.querySelectorAll('.service-card')[2].classList.add('active');
-            }
-            if(tab === 'airtime') {
-                document.getElementById('tab-airtime').classList.add('active');
-                document.querySelectorAll('.service-card')[0].classList.add('active');
-            }
+            if(tab === 'bingwa') { document.getElementById('tab-bingwa').classList.add('active'); document.querySelectorAll('.service-card')[1].classList.add('active'); }
+            if(tab === 'tunukiwa') { document.getElementById('tab-tunukiwa').classList.add('active'); document.querySelectorAll('.service-card')[2].classList.add('active'); }
+            if(tab === 'airtime') { document.getElementById('tab-airtime').classList.add('active'); document.querySelectorAll('.service-card')[0].classList.add('active'); }
             renderPackages(tab);
         }
 
         function openModal(pkg) {
             selectedPackage = pkg;
             document.getElementById('modal-package-details').innerText = `${pkg.volume} - KSh ${pkg.price}`;
-            
             document.getElementById('modal-form-state').style.display = 'block';
             document.getElementById('modal-loading-state').style.display = 'none';
             document.getElementById('modal-failed-state').style.display = 'none';
-            
             document.getElementById('payment-modal').style.display = 'flex';
         }
 
-        function closeModal() {
-            document.getElementById('payment-modal').style.display = 'none';
-        }
+        function closeModal() { document.getElementById('payment-modal').style.display = 'none'; }
 
         async function initiatePayment() {
             const phoneInput = document.getElementById('phone-number').value.trim();
@@ -282,7 +246,8 @@
             document.getElementById('modal-loading-state').style.display = 'block';
 
             try {
-                const response = await fetch('/api/tinypesa', {
+                // Halkan ayaan ku saxay si URL-ku u noqdo mid dhammaystiran
+                const response = await fetch('https://ahmed-data-deals-kenya.vercel.app/api/tinypesa', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -298,7 +263,7 @@
                     alert("STK Push ayaa laguu soo diray! Geli PIN-kaaga.");
                     closeModal();
                 } else {
-                    showFailedState(result.error || "TinyPesa error (http 403)");
+                    showFailedState(result.error || "TinyPesa error (http " + response.status + ")");
                 }
             } catch (err) {
                 showFailedState("Xiriirka server-ka ayaa go'an.");
@@ -308,19 +273,14 @@
         function showFailedState(msg) {
             document.getElementById('modal-loading-state').style.display = 'none';
             document.getElementById('modal-form-state').style.display = 'none';
-            
             const failedState = document.getElementById('modal-failed-state');
             failedState.style.display = 'block';
             document.getElementById('error-error-text').innerText = msg;
         }
 
-        function retryPayment() {
-            if(selectedPackage) openModal(selectedPackage);
-        }
+        function retryPayment() { if(selectedPackage) openModal(selectedPackage); }
 
-        window.onload = () => {
-            renderPackages('all');
-        };
+        window.onload = () => { renderPackages('all'); };
     </script>
 </body>
 </html>
