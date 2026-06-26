@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // CORS Configuration
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Apikey');
@@ -19,26 +20,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ success: false, error: 'Phone and amount are required' });
   }
 
+  // Nambarka oo loo beddelayo qaabka caalamiga ah (254...)
+  let msisdn = phone.trim();
+  if (msisdn.startsWith('0')) {
+    msisdn = '254' + msisdn.substring(1);
+  }
+
   try {
     const response = await fetch('https://tinypesa.com/api/v1/express/initialize', {
       method: 'POST',
       headers: {
-        // Halkan waxaan ku qoray Key-gaaga cusub si aanay u jirin wax isku dhex daldalan
-        'Apikey': '950LMleTTFkVXnNqd9S3ReNy6iX1-PmI57WiDEf7ZSsRqpmkBl',
-        'Content-Type': 'application/x-www-form-urlencoded'
+        'Apikey': process.env.TINYPESA_API_KEY as string, 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
-      // Halkan nambarkaaga rasmiga ah ayuu ku qoran yahay
-      body: `amount=${amount}&msisdn=${phone}&account_no=254725723383`
+      body: JSON.stringify({
+        amount: amount,
+        msisdn: msisdn,
+        account_no: '254725723383'
+      })
     });
 
     const data = await response.json();
+    
+    // Log-ga si aad Vercel dashboard uga arki karto wixii dhacay
+    console.log("TinyPesa Response:", data);
 
-    if (data.success || data.ResponseCode === '0') {
+    if (response.ok && (data.success || data.ResponseCode === '0')) {
       return res.status(200).json({ success: true, data });
     } else {
-      return res.status(400).json({ success: false, error: data.message || 'Payment initiation failed' });
+      return res.status(400).json({ 
+        success: false, 
+        error: data.message || 'Payment initiation failed' 
+      });
     }
   } catch (error) {
+    console.error("Fetch Error:", error);
     return res.status(500).json({ success: false, error: 'TinyPesa connection failed' });
   }
 }
