@@ -1,7 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS Configuration
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Apikey');
@@ -20,7 +19,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ success: false, error: 'Phone and amount are required' });
   }
 
-  // Nambarka oo loo beddelayo qaabka caalamiga ah (254...)
   let msisdn = phone.trim();
   if (msisdn.startsWith('0')) {
     msisdn = '254' + msisdn.substring(1);
@@ -43,19 +41,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const data = await response.json();
     
-    // Log-ga si aad Vercel dashboard uga arki karto wixii dhacay
-    console.log("TinyPesa Response:", data);
-
     if (response.ok && (data.success || data.ResponseCode === '0')) {
       return res.status(200).json({ success: true, data });
     } else {
-      return res.status(400).json({ 
-        success: false, 
-        error: data.message || 'Payment initiation failed' 
-      });
+      return res.status(400).json({ success: false, error: data.message || 'Payment initiation failed' });
     }
   } catch (error) {
-    console.error("Fetch Error:", error);
     return res.status(500).json({ success: false, error: 'TinyPesa connection failed' });
   }
 }
