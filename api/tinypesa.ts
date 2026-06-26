@@ -1,5 +1,6 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-
-export default function handler(req: VercelRequest, res: VercelResponse) {
-  res.status(200).json({ status: "Hello, server-ka wuu shaqaynayaa!" });
+// Gudaha tinypesa.ts
+headers: {
+  'Apikey': process.env.TINYPESA_API_KEY as string, 
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
 }
