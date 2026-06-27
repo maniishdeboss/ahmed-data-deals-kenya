@@ -1,48 +1,53 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // TinyPesa waxay xogta ku soo dirtaa qaab POST ah markay lacagtu guulaysato
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const { Amount, Msisdn } = req.body; // TinyPesa xogta ay soo dhiibto
+    // Waxaan u oggolaanaynaa inuu akhriyo Far-waawayn (STK) iyo Far-yaryar (Direct Link) labadaba
+    const amount = req.body.Amount || req.body.amount;
+    const msisdn = req.body.Msisdn || req.body.msisdn;
 
-    // 1. Hubi xirmada uu qofku iibsaday iyadoo loo eegayo lacagta (Amount)
-    let dataBundle = "";
-    if (Amount === 50) dataBundle = "1GB";
-    else if (Amount === 100) dataBundle = "2.5GB";
-    else if (Amount === 500) dataBundle = "10GB"; // Tusaale 10GB ah
-
-    if (!dataBundle) {
-      return res.status(400).json({ message: "Lacagtan xirmo uma u dhigma" });
+    if (!amount || !msisdn) {
+      return res.status(400).json({ error: "Xog dhammaystiran lama helin" });
     }
 
-    // 2. Kici Africa's Talking Data API si toos ah
+    // Isku beddel lambarka qaabka Africa's Talking ay rabto (+254...)
+    let formattedPhone = msisdn.toString();
+    if (!formattedPhone.startsWith('+')) {
+      formattedPhone = '+' + formattedPhone;
+    }
+
+    // 1. Go'ami xirmada loo dirayo iyadoo loo eegayo lacagta (Amount)
+    let packageQuantity = 0; // Immisa GB
+    if (Number(amount) === 50) packageQuantity = 1;      // 1GB
+    else if (Number(amount) === 100) packageQuantity = 2.5; // 2.5GB
+    else if (Number(amount) === 20) packageQuantity = 0.5;  // 500MB (Gacanta ka habee hadday tahay MB)
+
+    // 2. Toos ugu dir Africa's Talking
     const atResponse = await fetch('https://bundles.africastalking.com/v1/data/send', {
       method: 'POST',
       headers: {
-        'apiKey': process.env.AT_API_KEY || '', // Africa's Talking API Key
-        'username': process.env.AT_USERNAME || '', // Africa's Talking Username
+        'apiKey': process.env.AT_API_KEY || '',
+        'username': process.env.AT_USERNAME || '',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         username: process.env.AT_USERNAME,
-        productName: "AhmedDataDeals", // Magaca nidaamkaaga Africa's Talking ku dhex jira
+        productName: "AhmedDataDeals", 
         recipients: [
           {
-            phoneNumber: `+${Msisdn}`, // Lambarkii lacagta bixiyey (e.g. +254725...)
-            quantity: Amount === 500 ? 10 : 1, // Immisa GB ama MB (ku xidh shuruucda AT)
-            unit: "GB"
+            phoneNumber: formattedPhone,
+            quantity: packageQuantity,
+            unit: "GB" // Haddii ay MB tahay "MB" ka dhig
           }
         ]
       })
     });
 
-    const atResult = await atResponse.json();
-    
-    return res.status(200).json({ success: true, message: "Data sent via Africa's Talking" });
+    return res.status(200).json({ success: true, message: "Webhook processed successfully" });
 
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
