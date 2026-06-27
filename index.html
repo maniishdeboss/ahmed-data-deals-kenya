@@ -1,1 +1,21 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h1>Ahmed Data Deals - Pay</h1>
+    <input type="tel" id="phone" placeholder="07XXXXXXXX">
+    <button onclick="pay()">Bixi Lacagta</button>
 
+    <script>
+        async function pay() {
+            const phone = document.getElementById('phone').value;
+            const res = await fetch('/api/tinypesa', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone: phone, amount: 10 })
+            });
+            const data = await res.json();
+            alert(JSON.stringify(data));
+        }
+    </script>
+</body>
+</html>
