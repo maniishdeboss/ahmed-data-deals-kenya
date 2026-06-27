@@ -6,27 +6,44 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // Waxaan u oggolaanaynaa inuu akhriyo Far-waawayn (STK) iyo Far-yaryar (Direct Link) labadaba
-    const amount = req.body.Amount || req.body.amount;
-    const msisdn = req.body.Msisdn || req.body.msisdn;
+    // TinyPesa waxay xogta ku soo dirtaa 'amount' iyo 'msisdn' marka link la isticmaalo
+    const amount = req.body.amount || req.body.Amount;
+    const msisdn = req.body.msisdn || req.body.Msisdn;
 
     if (!amount || !msisdn) {
-      return res.status(400).json({ error: "Xog dhammaystiran lama helin" });
+      return res.status(200).json({ success: false, message: "No data found" });
     }
 
-    // Isku beddel lambarka qaabka Africa's Talking ay rabto (+254...)
-    let formattedPhone = msisdn.toString();
-    if (!formattedPhone.startsWith('+')) {
-      formattedPhone = '+' + formattedPhone;
+    // Habaynta nambarka si uu u noqdo qaabka Africa's Talking (+254...)
+    let phone = msisdn.toString().trim();
+    if (!phone.startsWith('+')) {
+      phone = '+' + phone;
     }
 
-    // 1. Go'ami xirmada loo dirayo iyadoo loo eegayo lacagta (Amount)
-    let packageQuantity = 0; // Immisa GB
-    if (Number(amount) === 50) packageQuantity = 1;      // 1GB
-    else if (Number(amount) === 100) packageQuantity = 2.5; // 2.5GB
-    else if (Number(amount) === 20) packageQuantity = 0.5;  // 500MB (Gacanta ka habee hadday tahay MB)
+    // Go'aami inta GB ama MB ee loo dirayo qofka marka loo eego lacagta uu bixiyey (Price)
+    let quantity = 0;
+    let unit = "GB";
 
-    // 2. Toos ugu dir Africa's Talking
+    const paidAmount = Number(amount);
+    if (paidAmount === 50) {
+        quantity = 1; // 1GB
+    } else if (paidAmount === 100) {
+        quantity = 2.5; // 2.5GB
+    } else if (paidAmount === 20) {
+        quantity = 500; 
+        unit = "MB"; // 500MB
+    } else if (paidAmount === 49) {
+        quantity = 1.2;
+    } else {
+        // Wixii airtime ah ama xirmo kale gacanta ka habee halkan sxb
+        quantity = 0; 
+    }
+
+    if (quantity === 0) {
+        return res.status(200).json({ message: "Xirmadan lama aqoonsan, badhanka hawada laguma kicin" });
+    }
+
+    // Kici Africa's Talking Data API
     const atResponse = await fetch('https://bundles.africastalking.com/v1/data/send', {
       method: 'POST',
       headers: {
@@ -36,18 +53,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       },
       body: JSON.stringify({
         username: process.env.AT_USERNAME,
-        productName: "AhmedDataDeals", 
+        productName: "AhmedDataDeals", // Magaca bundle product-kaaga ee AT ku dhex jira
         recipients: [
           {
-            phoneNumber: formattedPhone,
-            quantity: packageQuantity,
-            unit: "GB" // Haddii ay MB tahay "MB" ka dhig
+            phoneNumber: phone,
+            quantity: quantity,
+            unit: unit
           }
         ]
       })
     });
 
-    return res.status(200).json({ success: true, message: "Webhook processed successfully" });
+    const atResult = await atResponse.json();
+    return res.status(200).json({ success: true, data: atResult });
 
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
