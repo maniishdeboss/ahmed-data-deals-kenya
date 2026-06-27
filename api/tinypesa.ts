@@ -1,69 +1,34 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS Headers si looga fogaado xannibaad kasta
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-  );
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
-    const { phone, amount } = req.body;
-
-    if (!phone || !amount) {
-      return res.status(400).json({ error: 'Phone and amount are required' });
-    }
-
+    const { phone, amount } = req.body || {};
     const apiKey = process.env.TINYPESA_API_KEY;
-    if (!apiKey) {
-      return res.status(500).json({ success: false, error: 'TinyPesa API Key is missing in Vercel settings.' });
-    }
 
-    const url = 'https://tinypesa.com/api/v1/express/initialize';
-
-    // TinyPesa waxay si gaar ah u rabtaa qaab foom xogeed ah (Form URL Encoded)
-    const formData = new URLSearchParams();
-    formData.append('amount', amount.toString());
-    formData.append('msisdn', phone.toString());
-    formData.append('account_no', '254725722020'); 
-
-    const tinyPesaResponse = await fetch(url, {
+    // Halkan waxaan u dhisaynaa sidii ay TinyPesa rabtay oo ah Form caadi ah
+    const response = await fetch('https://tinypesa.com/api/v1/express/initialize', {
       method: 'POST',
       headers: {
-        'ApiKey': apiKey,
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Accept': 'application/json'
+        'ApiKey': apiKey || '',
+        'Content-Type': 'application/x-www-form-urlencoded'
       },
-      body: formData.toString(),
+      body: new URLSearchParams({
+        amount: amount?.toString(),
+        msisdn: phone?.toString(),
+        account_no: '254725722020'
+      }).toString()
     });
 
-    const textData = await tinyPesaResponse.text();
-    let data;
-    try {
-      data = JSON.parse(textData);
-    } catch (e) {
-      // Haddii TinyPesa ay fariin caadi ah soo celiso, halkaan ayaa lagu qabanayaa
-      return res.status(400).json({ success: false, error: 'TinyPesa Response: ' + textData.substring(0, 150) });
-    }
-
-    if (tinyPesaResponse.ok && (data.success === true || data.success === 1 || data.status === 'success')) {
-      return res.status(200).json({ success: true, data });
-    } else {
-      return res.status(400).json({ success: false, error: data.message || JSON.stringify(data) });
-    }
+    const text = await response.text();
+    return res.status(response.status).send(text);
 
   } catch (error: any) {
-    return res.status(500).json({ success: false, error: error.message || 'Internal Server Error' });
+    return res.status(500).json({ error: error.message });
   }
 }
