@@ -1,1 +1,13 @@
-
+{
+  "version": 2,
+  "routes": [
+    {
+      "src": "/api/tinypesa",
+      "dest": "/api/tinypesa.ts"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
+}
