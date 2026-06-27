@@ -1,1 +1,8 @@
-
+{
+  "name": "ahmed-data-deals-kenya",
+  "version": "1.0.0",
+  "dependencies": {},
+  "devDependencies": {
+    "@vercel/node": "^3.0.0"
+  }
+}
