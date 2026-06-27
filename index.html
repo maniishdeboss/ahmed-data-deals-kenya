@@ -108,15 +108,6 @@
 
     <div class="package-list" id="package-container"></div>
 
-    <div class="contact-section">
-        <h3 style="text-align: center; margin-top: 20px;">Contact Us</h3>
-        <a href="https://wa.me/254725723383" class="contact-btn" style="display: flex; align-items: center; justify-content: space-between; background: #white; padding: 12px 15px; border-radius: 10px; text-decoration: none; color: var(--dark); margin: 10px 20px; font-size: 14px; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.02);" target="_blank">
-            <span>WhatsApp Us</span>
-            <i data-lucide="message-square" style="color: var(--primary);"></i>
-        </a>
-    </div>
-
-    <!-- Modal Overlay Fixed For Direct Link -->
     <div class="modal-overlay" id="payment-modal">
         <div class="modal-sheet">
             <span class="modal-close" onclick="closeModal()">&times;</span>
@@ -126,7 +117,7 @@
                 <div class="modal-pkg-name" id="modal-package-details">-</div>
                 
                 <div class="how-it-works">
-                    <strong>Habka Lacag Bixinta:</strong> Markaad riixdo badhanka hoose, waxaad si toos ah u aadi doontaa boggaaga TinyPesa halkaas oo lacagtu ay sii diyaarsan tahay. Kaliya lambarkaaga qor si uu STK Push-ku kuugu soo dhaco.
+                    <strong>Habka Lacag Bixinta:</strong> Markaad riixdo badhanka hoose, waxaad si toos ah u aadi doontaa boggaaga TinyPesa. Kaliya nambarkaaga qor si uu STK Push-ku kuugu soo dhaco.
                 </div>
                 
                 <button type="button" class="btn-submit" id="payBtn" onclick="redirectToTinyPesa()">
@@ -137,7 +128,6 @@
         </div>
     </div>
 
-    <!-- JavaScript Business Logic Core -->
     <script>
         const packages = [
             { id: 1, type: 'bingwa', volume: '1GB + 200Mins', duration: '24 Hours', price: 50, tag: 'Hot Deal' },
@@ -204,14 +194,9 @@
             document.getElementById('payment-modal').style.display = 'none';
         }
 
-        // Shaqada toos u kaxaynaysa qofka oo lacagta sii xiriirinaysa
         function redirectToTinyPesa() {
             if (!selectedPackage) return;
-            
-            // Link-gaaga oo lacagta xirmada ay si toos ah ugu sii qoranyahay dhamaadka (?amount=X)
             const targetUrl = `https://tinypesa.com/ahmeddatadealskenya?amount=${selectedPackage.price}`;
-            
-            // Toos u furi nidaamka TinyPesa
             window.location.href = targetUrl;
         }
     </script>
