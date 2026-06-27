@@ -1,7 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Kaliya ogolao POST request
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
@@ -13,15 +12,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Phone and amount are required' });
     }
 
-    // TinyPesa Endpoint iyo API Key-gaaga CUSUB ee rasmiga ah
-    const url = 'https://tinypesa.com/api/v1/express/initialize';
-    const apiKey = 'rV4ZqAZRERxRKTw8A_2qBoumg3QxvoOj64jvGm2f';
+    const apiKey = process.env.TINYPEA_API_KEY;
 
-    // U diyaari xogta qaabka TinyPesa ay u baahan tahay
+    if (!apiKey) {
+      return res.status(500).json({ success: false, error: 'TinyPesa API Key is missing in Vercel settings.' });
+    }
+
+    const url = 'https://tinypesa.com/api/v1/express/initialize';
+
+    // U diyaari xogta qaabka TinyPesa
     const formData = new URLSearchParams();
     formData.append('amount', amount.toString());
-    formData.append('msisdn', phone);
-    formData.append('account_no', 'AhmedDataDeals');
+    formData.append('msisdn', phone); // Lambarka macmiilka ee laga qaadayo lacagta
+    formData.append('account_no', '254725722020'); // Lambarkaaga lacagtu ku soo dhacayso/lagu aqoonsanayo
 
     const tinyPesaResponse = await fetch(url, {
       method: 'POST',
