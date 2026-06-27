@@ -12,7 +12,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Phone and amount are required' });
     }
 
-    const apiKey = process.env.TINYPEA_API_KEY;
+    // Waxaan halkan ku saxnay magaca furaha (TINYPESA_API_KEY)
+    const apiKey = process.env.TINYPESA_API_KEY;
 
     if (!apiKey) {
       return res.status(500).json({ success: false, error: 'TinyPesa API Key is missing in Vercel settings.' });
@@ -20,11 +21,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const url = 'https://tinypesa.com/api/v1/express/initialize';
 
-    // U diyaari xogta qaabka TinyPesa
     const formData = new URLSearchParams();
     formData.append('amount', amount.toString());
-    formData.append('msisdn', phone); // Lambarka macmiilka ee laga qaadayo lacagta
-    formData.append('account_no', '254725722020'); // Lambarkaaga lacagtu ku soo dhacayso/lagu aqoonsanayo
+    formData.append('msisdn', phone);
+    formData.append('account_no', '254725722020'); 
 
     const tinyPesaResponse = await fetch(url, {
       method: 'POST',
