@@ -191,7 +191,6 @@
 
     <!-- JavaScript Business Logic Core -->
     <script>
-        // Sample Packages Dataset
         const packages = [
             { id: 1, type: 'bingwa', volume: '1GB + 200Mins', duration: '24 Hours', price: 50, tag: 'Hot Deal' },
             { id: 2, type: 'bingwa', volume: '2.5GB Unlimited', duration: '3 Days', price: 100, tag: 'Best Seller' },
@@ -203,13 +202,11 @@
 
         let selectedPackage = null;
 
-        // Initialize App
         window.addEventListener('DOMContentLoaded', () => {
             renderPackages('all');
             if (window.lucide) { lucide.createIcons(); }
         });
 
-        // Tab Filtering and Service Grid management
         function filterTab(tabType) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             const matchedTab = document.getElementById(`tab-${tabType}`);
@@ -222,7 +219,6 @@
             renderPackages(tabType);
         }
 
-        // Render Cards dynamically
         function renderPackages(filter) {
             const container = document.getElementById('package-container');
             container.innerHTML = '';
@@ -250,7 +246,6 @@
             if (window.lucide) { lucide.createIcons(); }
         }
 
-        // Modal Controls
         function openModal(pkg) {
             selectedPackage = pkg;
             document.getElementById('modal-package-details').innerText = `${pkg.volume} — KES ${pkg.price}`;
@@ -268,7 +263,6 @@
             document.getElementById('modal-failed-state').style.display = 'none';
         }
 
-        // Core TinyPesa Fetch Link Fixed Format
         async function startPaymentProcess() {
             const phoneInput = document.getElementById('phone-number').value.trim();
             if (!phoneInput) {
@@ -276,7 +270,6 @@
                 return;
             }
 
-            // NORMAZILE PHONE FOR KENYA MARKET (254...)
             let phone = phoneInput;
             if (phone.startsWith('0')) {
                 phone = '254' + phone.slice(1);
@@ -284,21 +277,30 @@
                 phone = '254' + phone;
             }
 
-            // Switch layout to loading state
             document.getElementById('modal-form-state').style.display = 'none';
             document.getElementById('modal-loading-state').style.display = 'block';
 
             try {
                 const response = await fetch('/api/tinypesa', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify({
                         phone: phone,
                         amount: selectedPackage ? selectedPackage.price : 50
                     })
                 });
 
-                const result = await response.json();
+                // Halkan ayaa wax laga beddelay si looga fogaado Unexpected token 'C'
+                const textResult = await response.text();
+                let result;
+                try {
+                    result = JSON.parse(textResult);
+                } catch(e) {
+                    throw new Error("Backend Error: " + textResult.substring(0, 50));
+                }
 
                 if (response.ok && result.success) {
                     document.getElementById('modal-loading-state').style.display = 'none';
@@ -309,7 +311,7 @@
                 }
             } catch (err) {
                 document.getElementById('modal-loading-state').style.display = 'none';
-                document.getElementById('error-message').innerText = err.message || "Failed to trigger M-Pesa transaction.";
+                document.getElementById('error-message').innerText = err.message;
                 document.getElementById('modal-failed-state').style.display = 'block';
             }
         }
