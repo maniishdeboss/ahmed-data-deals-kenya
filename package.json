@@ -2,16 +2,16 @@
   "name": "ahmed-data-deals-kenya",
   "version": "1.0.0",
   "description": "Ahmed Data Deals Kenya Web Application",
+  "type": "module",
   "scripts": {
     "start": "echo 'Frontend static project deployed directly'"
   },
   "dependencies": {
-    "@supabase/supabase-js": "latest",
-    "@vercel/node": "latest",
-    "next": "latest"
+    "@supabase/supabase-js": "^2.45.0",
+    "@vercel/node": "^3.2.0"
   },
   "devDependencies": {
-    "@types/node": "latest",
-    "typescript": "latest"
+    "@types/node": "^20.14.0",
+    "typescript": "^5.9.3"
   }
 }
