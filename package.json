@@ -6,12 +6,12 @@
     "start": "echo 'Frontend static project deployed directly'"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.0",
-    "@vercel/node": "^3.0.0",
-    "next": "14.0.0"
+    "@supabase/supabase-js": "latest",
+    "@vercel/node": "latest",
+    "next": "latest"
   },
   "devDependencies": {
-    "@types/node": "20.0.0",
-    "typescript": "5.0.0"
+    "@types/node": "latest",
+    "typescript": "latest"
   }
 }
