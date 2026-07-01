@@ -1,6 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { createClient } from '@supabase/supabase-js'
-import axios from 'axios'
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
@@ -60,18 +59,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (ussdCode !== '') {
       try {
-        // Halkan waxaa laga saaray device_id maadaama API Key-ga uu ku filan yahay talefankaaga
-        await axios.post('https://sms-gate.app', {
-          ussd: ussdCode
-        }, {
+        // Waxaan isticmaali doonaa 'fetch' oo ku dhex jira Node.js si looga fogaado khaladka axios
+        const apiResponse = await fetch('https://sms-gate.app', {
+          method: 'POST',
           headers: {
             'Authorization': 'Bearer sk_live_a5a7e8b65051540f5025e19deaa2afc763fd6e7773503621568ea41885e6e8b5',
             'Content-Type': 'application/json'
-          }
-        })
-        console.log(`USSD amarkiisa waa loo diray taleefanka: ${ussdCode}`)
+          },
+          body: JSON.stringify({
+            ussd: ussdCode
+          })
+        });
+
+        if (!apiResponse.ok) {
+          const errText = await apiResponse.text();
+          console.error("Cillad ka dhacday SMS Gateway Server-ka:", errText);
+        } else {
+          console.log(`USSD amarkiisa waa loo diray taleefanka: ${ussdCode}`);
+        }
       } catch (apiError: any) {
-        console.error("Cillad ka dhacday SMS Gateway API-ga:", apiError.response ? apiError.response.data : apiError.message)
+        console.error("Cillad ka dhacday nidaamka gudbinta:", apiError.message);
       }
     }
 
