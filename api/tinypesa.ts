@@ -7,12 +7,12 @@ const supabase = createClient(
 )
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // CORS configuration
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
 
   if (req.method === 'OPTIONS') return res.status(200).end()
-  
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, message: 'Method not allowed' })
   }
@@ -24,68 +24,58 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ success: false, message: 'Phone iyo amount waa lama huraan' })
     }
 
+    // Nambarka u habee qaabka ay Paykonnect rabto (Haddii uu 0 ku bilowdo ka saar, tusaale: 712345678)
     let cleanPhone = phone.toString().replace(/[^0-9]/g, '')
     if (cleanPhone.startsWith('254')) {
-      cleanPhone = '0' + cleanPhone.slice(3)
-    } else if (cleanPhone.startsWith('7') || cleanPhone.startsWith('1')) {
-      cleanPhone = '0' + cleanPhone
+      cleanPhone = cleanPhone.slice(3)
+    } else if (cleanPhone.startsWith('0')) {
+      cleanPhone = cleanPhone.slice(1)
     }
 
-    const { data, error } = await supabase
-      .from('data_transactions')
-      .insert([{
-        phone: cleanPhone,
-        amount: Number(amount),
-        status: 'pending',
-        transaction_id: null
-      }])
-      .select()
-      .single()
+    // Macluumaadka tijaabada (Sandbox Credentials) ee sawirkaaga ku dhex jira
+    const agentid = '101'
+    const agentpwd = 'demo123'
+    const transid = 'TXN' + Date.now() // Samey nambar transaction oo kala duwan markasta
+    
+    // U diyaarinta url parameters sidii shaxda Parameters ku qorneyd
+    const params = new URLSearchParams({
+      agentid: agentid,
+      transid: transid,
+      retailerid: agentid,
+      operatorcode: '1',    // 1 = Safaricom (Hubi buugga haddii uu ka duwan yahay)
+      circode: '1',         // Circle code (Default: 1)
+      product: 'RV',        // Product code (Default: RV)
+      denomination: String(amount),
+      recharge: String(amount),
+      deviceno: cleanPhone,
+      mobileno: cleanPhone,
+      bulkqty: '1',
+      narration: 'Ahmed Data Deals Sale',
+      agentpwd: agentpwd,
+      loginstatus: 'LIVE',
+      appver: '1.0'
+    })
 
-    if (error) throw error
+    // U dirista dalabka Paykonnect Sandbox API
+    const response = await fetch(`https://paykonnect.co.ke{params.toString()}`, {
+      method: 'POST'
+    })
 
-    let ussdCode = ''
-    const numAmount = Number(amount)
+    const responseText = await response.text()
+    console.log("Paykonnect Response:", responseText)
 
-    if (numAmount === 50) {
-      ussdCode = `*180*5*1*${cleanPhone}*1#`
-    } else if (numAmount === 100) {
-      ussdCode = `*180*5*2*${cleanPhone}*1#`
-    } else if (numAmount === 20) {
-      ussdCode = `*180*5*3*${cleanPhone}*1#`
-    } else if (numAmount === 49) {
-      ussdCode = `*180*5*4*${cleanPhone}*1#`
-    }
-
-    if (ussdCode !== '') {
-      try {
-        // Waxaan isticmaali doonaa 'fetch' oo ku dhex jira Node.js si looga fogaado khaladka axios
-        const apiResponse = await fetch('https://sms-gate.app', {
-          method: 'POST',
-          headers: {
-            'Authorization': 'Bearer sk_live_a5a7e8b65051540f5025e19deaa2afc763fd6e7773503621568ea41885e6e8b5',
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            ussd: ussdCode
-          })
-        });
-
-        if (!apiResponse.ok) {
-          const errText = await apiResponse.text();
-          console.error("Cillad ka dhacday SMS Gateway Server-ka:", errText);
-        } else {
-          console.log(`USSD amarkiisa waa loo diray taleefanka: ${ussdCode}`);
-        }
-      } catch (apiError: any) {
-        console.error("Cillad ka dhacday nidaamka gudbinta:", apiError.message);
-      }
-    }
+    // Ku keydi xogta transaction-ka gudaha Supabase
+    await supabase.from('data_transactions').insert([{
+      phone: cleanPhone,
+      amount: Number(amount),
+      status: responseText.includes('SUCCESS') ? 'success' : 'failed',
+      transaction_id: transid
+    }])
 
     return res.status(200).json({
       success: true,
-      message: 'Dalabka waa la diwaan geliyay, USSD-giina waa la kiciyay',
-      transaction: data
+      message: 'Dalabka waa la gudbiyay nidaamka Paykonnect',
+      paykonnect_raw: responseText
     })
 
   } catch (error: any) {
