@@ -8,11 +8,15 @@ const at = africastalking({
 })
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Waxaan hubinaynaa inuu yahay POST request
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
   try {
+    // Tijaabo: Waxaan logs-ka ku arkaynaa waxa TinyPesa noo soo dirtay
+    console.log('Xogta ka timid TinyPesa:', JSON.stringify(req.body));
+
     // 1. Hel xogta ka timid TinyPesa
     const amount = req.body.amount || req.body.Amount
     const msisdn = req.body.msisdn || req.body.Msisdn || req.body.MSISDN || req.body.phone
@@ -26,7 +30,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (phone.startsWith('0')) phone = '254' + phone.slice(1)
     else if (phone.startsWith('7')) phone = '254' + phone
 
-    // 3. Bundle map - Hubi in product_id uu sax yahay
+    // 3. Bundle map
     const BUNDLE_MAP: Record<number, { product_id: string }> = {
       10: { product_id: '1770' },
       20: { product_id: '1770' },
@@ -45,9 +49,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 4. U dir xogta Africa's Talking
     const data = at.DATA
     const result = await data.send({
-      productName: 'mobiledata', // Magaca aad ugu bixisay dashboard-ka 1000307057.jpg
-      phoneNumber: '+' + phone, // Africa's Talking waxay u baahan tahay qaabka +254...
-      // quantity waa inuu noqdaa mid ku habboon xirmada aad iibinayso
+      productName: 'mobiledata', // Hubi inuu yahay magaca dashboard-ka
+      phoneNumber: '+' + phone, 
       quantity: 1, 
       unit: 'GB' 
     })
