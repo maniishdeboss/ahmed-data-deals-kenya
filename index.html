@@ -6,82 +6,32 @@
     <title>Ahmed Data Deals Kenya</title>
     <script src="https://cdn.jsdelivr.net/npm/lucide-static@0.321.0/js/lucide.min.js"></script>
     <style>
-        :root {
-            --primary: #00b894;
-            --dark: #1e272e;
-            --light: #f5f6fa;
-            --white: #ffffff;
-            --gray: #84817a;
-        }
+        :root { --primary: #00b894; --dark: #1e272e; --light: #f5f6fa; --white: #ffffff; --gray: #84817a; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: var(--light); color: var(--dark); padding-bottom: 30px; }
-        
-        /* Header */
-        .header { background-color: var(--primary); color: var(--white); padding: 25px 20px; text-align: center; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; position: relative; }
-        .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 5px; }
-        .header p { font-size: 13px; opacity: 0.9; }
-
-        /* Grid Services */
+        .header { background-color: var(--primary); color: var(--white); padding: 25px 20px; text-align: center; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; }
         .services-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 20px; }
-        .service-card { background: var(--white); padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
+        .service-card { background: var(--white); padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); cursor: pointer; border: 2px solid transparent; }
         .service-card.active { border-color: var(--primary); background-color: #f0fff4; }
-        .service-card i { color: var(--primary); font-size: 24px; margin-bottom: 8px; display: block; }
-        .service-card h3 { font-size: 14px; margin-bottom: 4px; }
-        .service-card p { font-size: 11px; color: var(--gray); }
-
-        /* Tabs Nav */
         .tabs-nav { display: flex; overflow-x: auto; padding: 0 20px; gap: 10px; margin-bottom: 15px; }
-        .tab-btn { background: var(--white); border: 1px solid #dcdde1; padding: 8px 16px; border-radius: 20px; font-size: 13px; white-space: nowrap; cursor: pointer; font-weight: 600; }
-        .tab-btn.active { background: var(--primary); color: var(--white); border-color: var(--primary); }
-
-        /* Package Section */
-        .packages-header { padding: 0 20px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
-        .packages-header h2 { font-size: 16px; }
-        .badge { background: #e3faf2; color: var(--primary); padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
-        
+        .tab-btn { background: var(--white); border: 1px solid #dcdde1; padding: 8px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; font-weight: 600; }
+        .tab-btn.active { background: var(--primary); color: var(--white); }
         .package-list { padding: 0 20px; display: flex; flex-direction: column; gap: 10px; }
         .package-card { background: var(--white); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); cursor: pointer; }
-        .pkg-info .duration { font-size: 11px; color: var(--gray); font-weight: bold; text-transform: uppercase; }
-        .pkg-info .volume { font-size: 15px; font-weight: bold; margin: 2px 0; }
-        .pkg-info .tag { background: #ffeaa7; color: #d63031; font-size: 10px; padding: 1px 6px; border-radius: 4px; font-weight: bold; display: inline-block; }
-        
-        .pkg-buy { display: flex; align-items: center; gap: 10px; }
-        .pkg-price { font-size: 16px; font-weight: bold; }
-        .btn-zap { background: var(--primary); color: var(--white); border: none; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-
-        /* Modal Sheet */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: flex-end; z-index: 1000; }
-        .modal-sheet { background: var(--white); width: 100%; max-width: 500px; border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 20px; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); animation: slideUp 0.3s ease-out; }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        
-        .modal-close { float: right; font-size: 24px; cursor: pointer; color: var(--gray); }
-        .modal-title { font-size: 18px; font-weight: bold; margin-bottom: 5px; }
-        .modal-pkg-name { font-size: 15px; color: var(--primary); font-weight: bold; margin-bottom: 15px; }
-        
-        .how-it-works { font-size: 13px; color: var(--gray); margin-bottom: 20px; line-height: 1.5; }
-        .how-it-works strong { color: var(--dark); }
-
-        .btn-submit { background: var(--primary); color: var(--white); border: none; width: 100%; padding: 14px; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; text-decoration: none; }
+        .modal-sheet { background: var(--white); width: 100%; max-width: 500px; border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 20px; }
+        .btn-submit { background: var(--primary); color: var(--white); border: none; width: 100%; padding: 14px; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 15px; }
     </style>
 </head>
 <body>
 
     <div class="header">
         <h1>Ahmed Data Deals Kenya</h1>
-        <p>Your Link to the Internet</p>
     </div>
 
     <div class="services-grid">
-        <div class="service-card" id="srv-bingwa" onclick="filterTab('bingwa')">
-            <i data-lucide="wifi"></i>
-            <h3>Bingwa Data</h3>
-            <p>Affordable bundles</p>
-        </div>
-        <div class="service-card" id="srv-tunukiwa" onclick="filterTab('tunukiwa')">
-            <i data-lucide="zap"></i>
-            <h3>Tunukiwa</h3>
-            <p>Hourly flash data</p>
-        </div>
+        <div class="service-card" onclick="filterTab('bingwa')"><h3>Bingwa Data</h3></div>
+        <div class="service-card" onclick="filterTab('tunukiwa')"><h3>Tunukiwa</h3></div>
     </div>
 
     <div class="tabs-nav">
@@ -90,116 +40,79 @@
         <button class="tab-btn" id="tab-tunukiwa" onclick="filterTab('tunukiwa')">Tunukiwa</button>
     </div>
 
-    <div class="packages-header">
-        <h2>Available Packages</h2>
-        <span class="badge" id="pkg-count">0</span>
-    </div>
-
     <div class="package-list" id="package-container"></div>
 
     <div class="modal-overlay" id="payment-modal">
         <div class="modal-sheet">
-            <span class="modal-close" onclick="closeModal()">&times;</span>
-            
-            <div id="modal-form-state">
-                <div class="modal-title">Pay with M-PESA Portal</div>
-                <div class="modal-pkg-name" id="modal-package-details">-</div>
-                
-                <div class="how-it-works">
-                    <strong>Habka Lacag Bixinta:</strong> Markaad riixdo badhanka hoose, waxaad si toos ah u aadi doontaa boggaaga TinyPesa. Kaliya nambarkaaga qor si uu STK Push-ku kuugu soo dhaco.
-                </div>
-                
-                <button type="button" class="btn-submit" id="payBtn" onclick="redirectToTinyPesa()">
-                    <span>Go to TinyPesa Portal</span>
-                    <i data-lucide="external-link"></i>
-                </button>
-            </div>
+            <span style="float:right; cursor:pointer; font-size: 24px;" onclick="closeModal()">&times;</span>
+            <div id="modal-package-details" style="font-weight: bold; color: var(--primary); margin-bottom: 10px;">-</div>
+            <input type="tel" id="phone-number" placeholder="Enter Phone (e.g 0712345678)" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+            <button class="btn-submit" id="payBtn" onclick="sendSTK()"><span id="btn-text">Pay Now</span></button>
         </div>
     </div>
 
     <script>
         const packages = [
-            // Bingwa Data
-            { id: 1, type: 'bingwa', volume: '250MB (24hrs)', duration: '24 Hours', price: 18, tag: 'Bingwa' },
-            { id: 2, type: 'bingwa', volume: '1.25GB (Till midnight)', duration: 'Daily', price: 50, tag: 'Bingwa' },
-            { id: 3, type: 'bingwa', volume: '350MB (7 days)', duration: '7 Days', price: 52, tag: 'Bingwa' },
-            { id: 4, type: 'bingwa', volume: '1GB (24hrs)', duration: '24 Hours', price: 95, tag: 'Bingwa' },
-            { id: 5, type: 'bingwa', volume: '2GB (1 day)', duration: '1 Day', price: 100, tag: 'Bingwa' },
-            { id: 6, type: 'bingwa', volume: '2.5GB (3 days)', duration: '3 Days', price: 250, tag: 'Bingwa' },
-            { id: 7, type: 'bingwa', volume: '2.5GB (7 days)', duration: '7 Days', price: 300, tag: 'Bingwa' },
-            { id: 8, type: 'bingwa', volume: '6GB (7 days)', duration: '7 Days', price: 690, tag: 'Bingwa' },
-            { id: 9, type: 'bingwa', volume: '10GB (30 days)', duration: '30 Days', price: 990, tag: 'Bingwa' },
-            
-            // Tunukiwa
-            { id: 10, type: 'tunukiwa', volume: '1GB (1hr)', duration: '1 Hour', price: 19, tag: 'Tunukiwa' },
-            { id: 11, type: 'tunukiwa', volume: '1.5GB (3hrs)', duration: '3 Hours', price: 49, tag: 'Tunukiwa' },
-            { id: 12, type: 'tunukiwa', volume: '20 SMS', duration: '1 Day', price: 5, tag: 'Tunukiwa' },
-            { id: 13, type: 'tunukiwa', volume: '200 SMS', duration: '1 Day', price: 10, tag: 'Tunukiwa' },
-            { id: 14, type: 'tunukiwa', volume: '1000 SMS', duration: '7 Days', price: 30, tag: 'Tunukiwa' },
-            { id: 15, type: 'tunukiwa', volume: '1250 mins', duration: '30 Days', price: 1000, tag: 'Tunukiwa' }
+            { type: 'bingwa', volume: '250MB (24hrs)', duration: '24 Hours', price: 18 },
+            { type: 'bingwa', volume: '1.25GB (Till midnight)', duration: 'Daily', price: 50 },
+            { type: 'bingwa', volume: '350MB (7 days)', duration: '7 Days', price: 52 },
+            { type: 'bingwa', volume: '1GB (24hrs)', duration: '24 Hours', price: 95 },
+            { type: 'bingwa', volume: '2GB (1 day)', duration: '1 Day', price: 100 },
+            { type: 'bingwa', volume: '2.5GB (3 days)', duration: '3 Days', price: 250 },
+            { type: 'bingwa', volume: '2.5GB (7 days)', duration: '7 Days', price: 300 },
+            { type: 'bingwa', volume: '6GB (7 days)', duration: '7 Days', price: 690 },
+            { type: 'bingwa', volume: '10GB (30 days)', duration: '30 Days', price: 990 },
+            { type: 'tunukiwa', volume: '1GB (1hr)', duration: '1 Hour', price: 19 },
+            { type: 'tunukiwa', volume: '1.5GB (3hrs)', duration: '3 Hours', price: 49 },
+            { type: 'tunukiwa', volume: '20 SMS', duration: '1 Day', price: 5 },
+            { type: 'tunukiwa', volume: '200 SMS', duration: '1 Day', price: 10 },
+            { type: 'tunukiwa', volume: '1000 SMS', duration: '7 Days', price: 30 },
+            { type: 'tunukiwa', volume: '1250 mins', duration: '30 Days', price: 1000 }
         ];
 
         let selectedPackage = null;
 
-        window.addEventListener('DOMContentLoaded', () => {
-            renderPackages('all');
-            if (window.lucide) { lucide.createIcons(); }
-        });
-
-        function filterTab(tabType) {
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            const matchedTab = document.getElementById(`tab-${tabType}`);
-            if (matchedTab) matchedTab.classList.add('active');
-
-            document.querySelectorAll('.service-card').forEach(card => card.classList.remove('active'));
-            const matchedCard = document.getElementById(`srv-${tabType}`);
-            if (matchedCard) matchedCard.classList.add('active');
-
-            renderPackages(tabType);
-        }
-
         function renderPackages(filter) {
             const container = document.getElementById('package-container');
             container.innerHTML = '';
-            
             const filtered = filter === 'all' ? packages : packages.filter(p => p.type === filter);
-            document.getElementById('pkg-count').innerText = filtered.length;
-
             filtered.forEach(pkg => {
                 const card = document.createElement('div');
                 card.className = 'package-card';
-                card.onclick = () => openModal(pkg);
-                card.innerHTML = `
-                    <div class="pkg-info">
-                        <div class="duration">${pkg.duration}</div>
-                        <div class="volume">${pkg.volume}</div>
-                        ${pkg.tag ? `<div class="tag">${pkg.tag}</div>` : ''}
-                    </div>
-                    <div class="pkg-buy">
-                        <div class="pkg-price">KES ${pkg.price}</div>
-                        <button class="btn-zap"><i data-lucide="zap" style="width:16px;height:16px;color:white;"></i></button>
-                    </div>
-                `;
+                card.onclick = () => {
+                    selectedPackage = pkg;
+                    document.getElementById('modal-package-details').innerText = `${pkg.volume} — KES ${pkg.price}`;
+                    document.getElementById('payment-modal').style.display = 'flex';
+                };
+                card.innerHTML = `<div><strong>${pkg.volume}</strong><br><small>${pkg.duration}</small></div><div>KES ${pkg.price}</div>`;
                 container.appendChild(card);
             });
-            if (window.lucide) { lucide.createIcons(); }
         }
 
-        function openModal(pkg) {
-            selectedPackage = pkg;
-            document.getElementById('modal-package-details').innerText = `${pkg.volume} — KES ${pkg.price}`;
-            document.getElementById('payment-modal').style.display = 'flex';
+        function filterTab(t) { renderPackages(t); }
+        function closeModal() { document.getElementById('payment-modal').style.display = 'none'; }
+
+        async function sendSTK() {
+            const phone = document.getElementById('phone-number').value;
+            if (phone.length < 9) return alert('Fadlan geli nambarkaaga saxda ah');
+            
+            document.getElementById('btn-text').innerText = 'Processing...';
+            try {
+                const res = await fetch('/api/stk', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone, amount: selectedPackage.price })
+                });
+                const data = await res.json();
+                alert('STK Push waa la diray! Hubi telefoonkaaga.');
+                closeModal();
+            } catch (e) {
+                alert('Khalad ayaa dhacay, fadlan mar kale tijaabi.');
+            }
+            document.getElementById('btn-text').innerText = 'Pay Now';
         }
 
-        function closeModal() {
-            document.getElementById('payment-modal').style.display = 'none';
-        }
-
-        function redirectToTinyPesa() {
-            if (!selectedPackage) return;
-            const targetUrl = ``;
-            window.location.href = targetUrl;
-        }
+        renderPackages('all');
     </script>
 </body>
 </html>
