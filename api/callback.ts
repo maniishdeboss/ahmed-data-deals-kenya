@@ -18,21 +18,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const msisdn = req.body.msisdn || req.body.Msisdn || req.body.MSISDN || req.body.phone
 
     if (!amount || !msisdn) {
-      return res.status(200).json({ success: false, message: 'No data found' })
+      return res.status(400).json({ success: false, message: 'Macluumaad dhiman' })
     }
 
     // 2. Nambarka u habee 2547...
     let phone = msisdn.toString().replace(/[^0-9]/g, '')
     if (phone.startsWith('0')) phone = '254' + phone.slice(1)
-    if (phone.startsWith('7')) phone = '254' + phone
+    else if (phone.startsWith('7')) phone = '254' + phone
 
-    // 3. Bundle map - Halkan u isticmaal 1770 sida aan kawada hadalnay
+    // 3. Bundle map - Hubi in product_id uu sax yahay
     const BUNDLE_MAP: Record<number, { product_id: string }> = {
-      10: { product_id: '1770' }, // 10 KES
-      20: { product_id: '1770' }, // 20 KES
-      40: { product_id: '1770' }, // 40 KES
-      49: { product_id: '1770' }, // 49 KES
-      95: { product_id: '1770' }, // 95 KES
+      10: { product_id: '1770' },
+      20: { product_id: '1770' },
+      40: { product_id: '1770' },
+      49: { product_id: '1770' },
+      95: { product_id: '1770' },
     }
 
     const paidAmount = Number(amount)
@@ -45,15 +45,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 4. U dir xogta Africa's Talking
     const data = at.DATA
     const result = await data.send({
-      productName: 'mobiledata', // Hubi inuu magacani yahay kii aad ku samaysatay dashboard-ka
-      phoneNumber: phone,
-      quantity: 1, // Halkan waxaa laga yaabaa inay u baahan tahay cadad
-      // Waxaa laga yaabaa inaad u baahato inaad product_id ku dhex riddo options-ka
+      productName: 'mobiledata', // Magaca aad ugu bixisay dashboard-ka 1000307057.jpg
+      phoneNumber: '+' + phone, // Africa's Talking waxay u baahan tahay qaabka +254...
+      // quantity waa inuu noqdaa mid ku habboon xirmada aad iibinayso
+      quantity: 1, 
+      unit: 'GB' 
     })
 
-    return res.status(200).json({ success: true, data: result })
+    return res.status(200).json({ success: true, result: result })
 
   } catch (error: any) {
+    console.error('AT Error:', error)
     return res.status(500).json({ error: error.message })
   }
 }
