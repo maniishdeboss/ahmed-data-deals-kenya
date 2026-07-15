@@ -24,7 +24,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ success: false, message: 'Phone iyo amount waa lama huraan' })
     }
 
-    // Nambarka u habee qaabka ay Paykonnect rabto (Haddii uu 0 ku bilowdo ka saar, tusaale: 712345678)
+    // Nambarka oo la saxayo (254...)
     let cleanPhone = phone.toString().replace(/[^0-9]/g, '')
     if (cleanPhone.startsWith('254')) {
       cleanPhone = cleanPhone.slice(3)
@@ -32,19 +32,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       cleanPhone = cleanPhone.slice(1)
     }
 
-    // Macluumaadka tijaabada (Sandbox Credentials) ee sawirkaaga ku dhex jira
+    // Credentials
     const agentid = '101'
     const agentpwd = 'demo123'
-    const transid = 'TXN' + Date.now() // Samey nambar transaction oo kala duwan markasta
+    const transid = 'TXN' + Date.now()
     
-    // U diyaarinta url parameters sidii shaxda Parameters ku qorneyd
+    // Parameters
     const params = new URLSearchParams({
       agentid: agentid,
       transid: transid,
       retailerid: agentid,
-      operatorcode: '1',    // 1 = Safaricom (Hubi buugga haddii uu ka duwan yahay)
-      circode: '1',         // Circle code (Default: 1)
-      product: 'RV',        // Product code (Default: RV)
+      operatorcode: '1',
+      circode: '1',
+      product: 'RV',
       denomination: String(amount),
       recharge: String(amount),
       deviceno: cleanPhone,
@@ -56,15 +56,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       appver: '1.0'
     })
 
-    // U dirista dalabka Paykonnect Sandbox API
-    const response = await fetch(`https://paykonnect.co.ke{params.toString()}`, {
+    // URL-ka oo la saxay (calaamadda ? waa lagu daray)
+    const apiUrl = `https://paykonnect.co.ke/?${params.toString()}`
+    
+    const response = await fetch(apiUrl, {
       method: 'POST'
     })
 
     const responseText = await response.text()
     console.log("Paykonnect Response:", responseText)
 
-    // Ku keydi xogta transaction-ka gudaha Supabase
+    // Keydinta xogta
     await supabase.from('data_transactions').insert([{
       phone: cleanPhone,
       amount: Number(amount),
@@ -74,11 +76,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(200).json({
       success: true,
-      message: 'Dalabka waa la gudbiyay nidaamka Paykonnect',
+      message: 'Dalabka waa la gudbiyay',
       paykonnect_raw: responseText
     })
 
   } catch (error: any) {
+    console.error("Error:", error)
     return res.status(500).json({ success: false, error: error.message })
   }
 }
