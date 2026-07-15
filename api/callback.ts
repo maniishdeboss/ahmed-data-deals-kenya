@@ -8,55 +8,49 @@ const at = africastalking({
 })
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // 1. Hubi amniga: Kaliya TinyPesa API (ama server-kaaga) ayaa oggol inuu soo diro POST
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
   try {
-    // 2. Log-garee xogta si aan u hubino inay soo gaartay Vercel
-    console.log('Xogta ka timid TinyPesa:', JSON.stringify(req.body));
+    console.log('Xogta ka timid Paykonnect/TinyPesa:', JSON.stringify(req.body));
 
-    // 3. Hel xogta: TinyPesa waxay inta badan ku soo dirtaa 'amount' iyo 'msisdn'
-    const amount = req.body.amount || req.body.Amount
-    const msisdn = req.body.msisdn || req.body.Msisdn || req.body.MSISDN || req.body.phone
+    // Qaadashada xogta (waxaan u dhex galnay dhowr ikhtiyaar si ay ula shaqeyso nooc kasta oo callback ah)
+    const amount = Number(req.body.amount || req.body.Amount || req.body.RECHARGE || 0)
+    const msisdn = req.body.msisdn || req.body.Msisdn || req.body.MSISDN || req.body.phone || req.body.deviceno
 
     if (!amount || !msisdn) {
       return res.status(400).json({ success: false, message: 'Macluumaad dhiman' })
     }
 
-    // 4. Nambarka u habee 2547...
+    // Nambarka oo la saxayo (254...)
     let phone = msisdn.toString().replace(/[^0-9]/g, '')
     if (phone.startsWith('0')) phone = '254' + phone.slice(1)
     else if (phone.startsWith('7')) phone = '254' + phone
 
-    // 5. Hubi xirmada (Bundle Logic)
-    const BUNDLE_MAP: Record<number, { product_id: string }> = {
-      10: { product_id: '1770' },
-      20: { product_id: '1770' },
-      40: { product_id: '1770' },
-      49: { product_id: '1770' },
-      95: { product_id: '1770' },
+    // Hubinta Xirmada
+    const BUNDLE_MAP: Record<number, { product_id: string, quantity: number }> = {
+      18: { product_id: '1770', quantity: 250 },
+      50: { product_id: '1770', quantity: 1250 },
+      52: { product_id: '1770', quantity: 350 },
     }
 
-    const paidAmount = Number(amount)
-    const bundle = BUNDLE_MAP[paidAmount]
+    const bundle = BUNDLE_MAP[amount]
 
     if (!bundle) {
-      return res.status(200).json({ message: 'Xirmadan lama aqoonsan' })
+      return res.status(200).json({ message: 'Xirmadan lama aqoonsan ama amount-ka ayaa qaldan' })
     }
 
-    // 6. U dir xogta Africa's Talking
-    // Xusuusin: Hubi in 'mobiledata' uu yahay magaca saxda ah ee aad AT dashboard-ka ku abuurtay
+    // U dirista xogta Africa's Talking
     const data = at.DATA
     const result = await data.send({
-      productName: 'mobiledata',
+      productName: 'mobiledata', // Hubi inuu yahay magacaaga saxda ah ee AT
       phoneNumber: '+' + phone,
-      quantity: 1, 
-      unit: 'GB' 
+      quantity: bundle.quantity, 
+      unit: 'MB' 
     })
 
-    console.log('Africa Talking Response:', result);
+    console.log('Africa Talking Success:', result);
 
     return res.status(200).json({ success: true, result: result })
 
