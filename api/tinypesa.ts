@@ -7,7 +7,6 @@ const supabase = createClient(
 )
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS configuration
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
@@ -24,60 +23,58 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ success: false, message: 'Phone iyo amount waa lama huraan' })
     }
 
-    // Nambarka oo la saxayo (254...)
-    let cleanPhone = phone.toString().replace(/[^0-9]/g, '')
-    if (cleanPhone.startsWith('254')) {
-      cleanPhone = cleanPhone.slice(3)
-    } else if (cleanPhone.startsWith('0')) {
-      cleanPhone = cleanPhone.slice(1)
+    // Nambarka u beddel 2547XXXXXXXX - TinyPesa sidaas ayuu rabaa
+    let raw = phone.toString().replace(/[^0-9]/g, '')
+    let cleanPhone254 = raw
+    if (raw.startsWith('0')) {
+      cleanPhone254 = '254' + raw.slice(1)
+    } else if (raw.startsWith('7')) {
+      cleanPhone254 = '254' + raw
+    } else if (!raw.startsWith('254')) {
+      cleanPhone254 = '254' + raw
     }
-
-    // Credentials
-    const agentid = '101'
-    const agentpwd = 'demo123'
-    const transid = 'TXN' + Date.now()
     
-    // Parameters
-    const params = new URLSearchParams({
-      agentid: agentid,
-      transid: transid,
-      retailerid: agentid,
-      operatorcode: '1',
-      circode: '1',
-      product: 'RV',
-      denomination: String(amount),
-      recharge: String(amount),
-      deviceno: cleanPhone,
-      mobileno: cleanPhone,
-      bulkqty: '1',
-      narration: 'Ahmed Data Deals Sale',
-      agentpwd: agentpwd,
-      loginstatus: 'LIVE',
-      appver: '1.0'
-    })
+    // Short version for DB 7XX
+    const cleanPhoneShort = cleanPhone254.slice(3)
+    const transid = 'TXN' + Date.now()
 
-    // URL-ka oo la saxay (calaamadda ? waa lagu daray)
-    const apiUrl = `https://paykonnect.co.ke/?${params.toString()}`
+    // TinyPesa Real API
+    const apiUrl = 'https://tinypesa.com/api/v1/express/initialize'
     
     const response = await fetch(apiUrl, {
-      method: 'POST'
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Apikey': process.env.TINYPESA_API_KEY as string
+      },
+      body: JSON.stringify({
+        amount: Number(amount),
+        msisdn: cleanPhone254,
+        account_no: transid
+      })
     })
 
     const responseText = await response.text()
-    console.log("Paykonnect Response:", responseText)
+    let responseData: any = {}
+    try { responseData = JSON.parse(responseText) } catch { responseData = { raw: responseText } }
+    
+    console.log("TinyPesa Response:", responseText)
+
+    const isSuccess = response.ok && (responseData.success === true || responseText.includes('SUCCESS'))
 
     // Keydinta xogta
     await supabase.from('data_transactions').insert([{
-      phone: cleanPhone,
+      phone: cleanPhoneShort,
       amount: Number(amount),
-      status: responseText.includes('SUCCESS') ? 'success' : 'failed',
+      status: isSuccess ? 'pending' : 'failed',
       transaction_id: transid
     }])
 
     return res.status(200).json({
-      success: true,
-      message: 'Dalabka waa la gudbiyay',
-      paykonnect_raw: responseText
+      success: isSuccess,
+      message: isSuccess ? 'STK waa la diray, telefoonkaaga hubi' : 'STK diristu way fashilantay',
+      transaction_id: transid,
+      tinypesa_raw: responseData
     })
 
   } catch (error: any) {
