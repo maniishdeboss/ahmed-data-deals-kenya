@@ -8,19 +8,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     if (!process.env.TINYPESA_API_KEY) {
-      return res.status(500).json({ success: false, message: 'TINYPESA_API_KEY missing' })
+      return res.status(500).json({ success: false, message: 'TINYPESA_API_KEY missing in Vercel' })
     }
 
     const { phone, amount } = req.body
-    if (!phone || !amount) return res.status(400).json({ success: false, message: 'phone missing' })
-
-    // TinyPesa docs waxay rabaa 07... ee ma ahan 254...
     let raw = phone.toString().replace(/[^0-9]/g,'')
     let msisdn = raw.startsWith('0') ? raw : raw.startsWith('7') ? '0'+raw : '0'+raw.slice(-9)
-    if (msisdn.startsWith('254')) msisdn = '0' + msisdn.slice(3)
+    if (msisdn.startsWith('254')) msisdn = '0'+msisdn.slice(3)
 
-    // JSON ayaan u diraynaa si aan uga boodno "Cross-site POST" CSRF-ka
-    const response = await fetch('https://tinypesa.com/api/v1/express/initialize', {
+    const r = await fetch('https://tinypesa.com/api/v1/express/initialize', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -29,23 +25,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       },
       body: JSON.stringify({
         amount: Number(amount),
-        msisdn: msisdn,
-        account_no: 'TXN' + Date.now()
+        msisdn,
+        account_no: 'TXN'+Date.now()
       })
     })
 
-    const text = await response.text()
+    const text = await r.text()
     console.log('TinyPesa RAW:', text)
 
     let data: any
-    try { data = JSON.parse(text) } catch { data = { raw: text } }
+    try { data = JSON.parse(text) } catch { data = { raw: text.slice(0,800) } }
 
-    // Haddii TinyPesa wali HTML soo celiso, waa inay tahay error page
-    if (!response.ok) {
-      return res.status(200).json({ success: false, message: data.message || 'TinyPesa error', data })
+    if (text.includes('<!DOCTYPE') || text.includes('Cross-site')) {
+      return res.status(200).json({ success: false, message: 'TinyPesa blocked, check API Key / credits', data })
     }
 
-    return res.status(200).json({ success: true, message: 'STK waa la diray', data })
+    return res.status(200).json({ success: true, data })
 
   } catch (e:any) {
     console.error('STK CRASH:', e.message)
