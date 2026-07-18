@@ -7,15 +7,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'OPTIONS') return res.status(200).end()
 
   try {
-    if (!process.env.TINYPESA_API_KEY) {
-      return res.status(500).json({ success: false, message: 'TINYPESA_API_KEY missing' })
-    }
-
     const { phone, amount } = req.body
+    if (!phone || !amount) return res.status(400).json({ success: false, message: 'phone missing' })
+
     let raw = phone.toString().replace(/[^0-9]/g,'')
-    let msisdn = raw.startsWith('0') ? raw : raw.startsWith('7') ? '0'+raw : raw
-    // TinyPesa waxay jeceshahay 07... sida example-ka, ee ma ahan 254...
-    if (msisdn.startsWith('254')) msisdn = '0' + msisdn.slice(3)
+    let msisdn = raw.startsWith('0') ? raw : raw.startsWith('7') ? '0'+raw : '0'+raw.slice(-9)
+    if (msisdn.startsWith('254')) msisdn = '0'+msisdn.slice(3)
 
     const params = new URLSearchParams()
     params.append('amount', String(amount))
@@ -26,22 +23,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'Apikey': process.env.TINYPESA_API_KEY as string
+        'Apikey': process.env.TINYPESA_API_KEY as string,
+        'Origin': 'https://tinypesa.com',
+        'Referer': 'https://tinypesa.com/',
+        'Accept': 'application/json'
       },
       body: params.toString()
     })
 
     const text = await response.text()
-    console.log('TinyPesa RAW:', text)
+    console.log('TinyPesa RAW:', text.slice(0,1000))
 
     let data: any
     try { data = JSON.parse(text) } catch { data = { raw: text.slice(0,500) } }
 
-    if (!response.ok) {
-      return res.status(200).json({ success: false, message: 'TinyPesa error', data })
+    if (text.includes('Cross-site') || text.includes('<!DOCTYPE')) {
+      return res.status(200).json({ success: false, message: 'TinyPesa blocked - CSRF', data })
     }
 
-    return res.status(200).json({ success: true, message: 'STK waa la diray', data })
+    return res.status(200).json({ success: true, data })
 
   } catch (e:any) {
     console.error('STK CRASH:', e.message)
