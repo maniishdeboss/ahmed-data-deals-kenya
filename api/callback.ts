@@ -1,57 +1,50 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import africastalking from 'africastalking'
-
-// Africa Talking - kaliya 2-da env ee aad Vercel ku haysato ayuu isticmaalaa
-const at = africastalking({
-  apiKey: process.env.AT_API_KEY as string,
-  username: process.env.AT_USERNAME as string,
-})
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method!== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' })
-  }
-
   try {
-    // Xogta ka timid TinyPesa
-    const amount = Number(req.body.amount || req.body.Amount)
-    const msisdn = req.body.msisdn || req.body.Msisdn || req.body.phone
+    console.log('TINYPESA WEBHOOK:', JSON.stringify(req.body))
 
-    if (!amount ||!msisdn) {
-      return res.status(400).json({ success: false, message: 'amount ama phone maqan' })
+    const amount = Number(req.body?.amount || req.body?.Amount || 0)
+    const phone = (req.body?.msisdn || req.body?.phone || '').toString()
+
+    // Amount → Bundle map
+    const bundleMap: any = {
+      18: '250MB',
+      50: '1.25GB',
+      52: '350MB',
+      95: '1GB',
+      100: '2GB',
+      250: '2.5GB_3days',
+      300: '2.5GB_7days',
+      690: '6GB',
+      990: '10GB'
     }
 
-    // Nambarka sax 254...
-    let phone = msisdn.toString().replace(/[^0-9]/g, '')
-    if (phone.startsWith('0')) phone = '254' + phone.slice(1)
-    else if (phone.startsWith('7')) phone = '254' + phone
+    const bundle = bundleMap[amount] || `KES_${amount}`
 
-    // Amount-ka u beddel MB - halkan ku hagaaji bundle-yada
-    const BUNDLE_MAP: Record<number, number> = {
-      18: 250,
-      50: 1250,
-      52: 350
+    // HALKAN KA WAC AFRICA TALKING - tusaale
+    // Haddii AT credentials Vercel ku jirto:
+    if (process.env.AT_API_KEY && phone) {
+      await fetch('https://airtime.africastalking.com/mobile/data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apiKey': process.env.AT_API_KEY
+        },
+        body: JSON.stringify({
+          username: process.env.AT_USERNAME,
+          productName: process.env.AT_PRODUCT,
+          recipients: [{ phoneNumber: phone, quantity: bundle }]
+        })
+      })
     }
 
-    const quantity = BUNDLE_MAP[amount]
-    if (!quantity) {
-      return res.status(200).json({ message: 'Amount-kan bundle looma hayo' })
-    }
+    // MAR WALBA 200 soo celi si TinyPesa uusan retry u samayn
+    return res.status(200).json({ success: true, received: { amount, phone, bundle } })
 
-    // Dir Africa's Talking DATA
-    const data = at.DATA
-    const result = await data.send({
-      productName: 'mobiledata', // Hubi AT dashboard-kaaga magaca product-ka DATA
-      phoneNumber: '+' + phone,
-      quantity: quantity,
-      unit: 'MB'
-    })
-
-    console.log('Africa Talking Success:', result)
-    return res.status(200).json({ success: true, result })
-
-  } catch (error: any) {
-    console.error('AT Error:', error)
-    return res.status(500).json({ error: error.message })
+  } catch (e: any) {
+    console.error('CALLBACK CRASH:', e.message)
+    // Xataa haddii crash, 200 soo celi si lacagta customer-ka loo waayin
+    return res.status(200).json({ success: false, error: e.message })
   }
 }
