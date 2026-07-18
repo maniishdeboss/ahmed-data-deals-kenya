@@ -41,3 +41,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Dir Africa's Talking DATA
     const data = at.DATA
     const result = await data.send({
+      productName: 'mobiledata', // Hubi AT dashboard-kaaga magaca product-ka DATA
+      phoneNumber: '+' + phone,
+      quantity: quantity,
+      unit: 'MB'
+    })
+
+    console.log('Africa Talking Success:', result)
+    return res.status(200).json({ success: true, result })
+
+  } catch (error: any) {
+    console.error('AT Error:', error)
+    return res.status(500).json({ error: error.message })
+  }
+}
