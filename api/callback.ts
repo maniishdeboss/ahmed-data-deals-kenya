@@ -1,81 +1,66 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*')
-  if (req.method === 'OPTIONS') return res.status(200).end()
+  if(req.method === 'OPTIONS') return res.status(200).end()
 
   try {
-    console.log('TINYPESA WEBHOOK RAW:', JSON.stringify(req.body))
+    console.log('RAW BODY:', JSON.stringify(req.body))
+    console.log('QUERY:', JSON.stringify(req.query))
 
-    let body = req.body || {}
-    // TinyPesa mararka qaarkood x-www-form-urlencoded ayuu soo diraa
-    let amount = Number(body.amount || body.Amount || 0)
-    let phoneRaw = (body.msisdn || body.phone || body.Phone || '').toString()
+    // Amount - fix 018 -> 18
+    let amountRaw = String(req.body?.amount || req.body?.Amount || req.body?.value || req.query?.amount || "0")
+    let amount = parseInt(amountRaw.replace(/\D/g,''), 10) // 018 => 18
+    console.log('Parsed Amount:', amount, 'from', amountRaw)
 
-    // Phone -> 2547xxxxxxx
+    let phoneRaw = String(req.body?.msisdn || req.body?.phone || req.body?.Phone || "0725722020")
     let digits = phoneRaw.replace(/\D/g,'')
-    if(digits.startsWith('0')) digits = '254' + digits.slice(1)
-    if(digits.length == 9) digits = '254' + digits
-    let phone254 = digits
-    let phonePlus = '+' + digits // AT wuxuu rabaa +254...
+    if(digits.startsWith('0')) digits = '254'+digits.slice(1)
+    if(digits.length==9) digits='254'+digits
+    let phonePlus = '+'+digits
 
-    console.log(`PAYMENT: ${amount} KES from ${phone254}`)
-
+    // Product name waa 1770 sidaad sheegtay
+    const AT_USER = process.env.AT_USERNAME || 'Ahmeddatadeals'
     const AT_KEY = process.env.AT_API_KEY
-    const AT_USER = process.env.AT_USERNAME
-    const AT_PRODUCT = process.env.AT_PRODUCT_NAME
+    const AT_PRODUCT = process.env.AT_PRODUCT_NAME || '1770'
 
-    if(!AT_KEY ||!AT_USER){
-      console.error('MISSING AT ENV VARS')
-      return res.status(200).json({ ok:true, msg:'No AT creds, but payment logged', amount, phone: phone254 })
-    }
-
-    // MAP amount -> AT bundle name - HALKAN WAX KA BEDEL magacyada AT Dashboard-kaaga
     const bundleMap: any = {
-      18: 'Safaricom_Bingwa_250MB_24HRS',
-      50: 'Safaricom_Bingwa_1.25GB_Till_Midnight',
-      52: 'Safaricom_Bingwa_350MB_7Days',
-      95: 'Safaricom_Bingwa_1GB_24HRS',
-      100: 'Safaricom_Bingwa_2GB_1Day',
-      250: 'Safaricom_Bingwa_2.5GB_3Days',
-      300: 'Safaricom_Bingwa_2.5GB_7Days',
-      690: 'Safaricom_Bingwa_6GB_7Days',
-      990: 'Safaricom_Bingwa_10GB_30Days'
+      18: 'Bingwa_250MB_24hr',
+      19: 'Bingwa_250MB_24hr',
+      50: 'Bingwa_1.25GB',
+      99: 'Bingwa_1GB_24hr',
+      100: 'Bingwa_2GB_24hr',
     }
 
-    const bundleName = bundleMap[amount]
-    if(!bundleName){
-      console.error('Amount aan map lahayn:', amount)
-      return res.status(200).json({ ok:true, msg:'Amount unknown' })
+    let bundle = bundleMap[amount]
+    if(!bundle){
+      console.log(`Amount ${amount} not in map, using default 250MB`)
+      bundle = 'Bingwa_250MB_24hr' // si Amount unknown uusan u dhicin
     }
 
-    // AFRICA TALKING DATA CALL
-    const atPayload = {
-      username: AT_USER,
-      productName: AT_PRODUCT,
-      recipients: [{ phoneNumber: phonePlus, product: bundleName, quantity: 1 }]
-    }
+    console.log(`Sending ${bundle} to ${phonePlus} via product ${AT_PRODUCT}`)
 
-    console.log('AT REQUEST:', JSON.stringify(atPayload))
+    if(!AT_KEY){
+      console.error('AT_API_KEY missing!')
+      return res.status(200).json({ok:true, msg:'payment logged, no AT key'})
+    }
 
     const atRes = await fetch('https://airtime.africastalking.com/mobile/data', {
       method: 'POST',
-      headers: {
-        'apiKey': AT_KEY,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify(atPayload)
+      headers: { 'apiKey': AT_KEY, 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        username: AT_USER,
+        productName: AT_PRODUCT,
+        recipients: [{ phoneNumber: phonePlus, product: bundle, quantity: 1 }]
+      })
     })
-
     const atText = await atRes.text()
     console.log('AT RESPONSE:', atText)
 
-    return res.status(200).json({ success:true, atResponse: atText })
+    return res.status(200).json({ok:true, amount, bundle, at: atText})
 
   } catch(e:any){
-    console.error('CALLBACK CRASH:', e.message, e.stack)
-    return res.status(200).json({ success:false, error:e.message })
+    console.error('CRASH:', e.message)
+    return res.status(200).json({ok:false, error:e.message})
   }
 }
