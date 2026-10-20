@@ -1,0 +1,22 @@
+{
+  "previewPort": 3000,
+  "healthPath": "/",
+  "startCommand": "docker compose -f docker-compose.base44.yml up -d",
+  "secrets": [
+    {
+      "name": "STATUM_CONSUMER_KEY",
+      "description": "Statum API consumer key used by /api/bundles (from your Statum developer dashboard).",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "STATUM_CONSUMER_SECRET",
+      "description": "Statum API consumer secret paired with STATUM_CONSUMER_KEY (from your Statum developer dashboard).",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "AT_API_KEY",
+      "description": "Africa's Talking API key used by /api/callback to send mobile data (from the Africa's Talking dashboard).",
+      "requiredAtBoot": false
+    }
+  ]
+}
